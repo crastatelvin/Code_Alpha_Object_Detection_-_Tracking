@@ -59,32 +59,47 @@ class VideoProcessingThread(threading.Thread):
     def run(self):
         global latest_frame_bytes, telemetry
         
-        # 1. Download sample video if needed
-        source = global_state["source"]
-        if source == "videos/test.mp4":
-            download_sample_video(source)
-
-        cap = cv2.VideoCapture(int(source) if source.isdigit() else source)
-        if not cap.isOpened():
-            print(f"Error: Unable to open video source: {source}")
-            global_state["is_running"] = False
-            return
-
-        # 2. Instantiate YOLOv8
-        self.detector = YOLODetector(config.MODEL_PATH)
-        
-        # 3. Setup FPS & Line Counter
+        # 1. Setup FPS & Line Counter
         fps_calc = FPSCalculator()
         counter = LineCounter(config.COUNTING_LINE)
         
-        # Determine frame delay for video files to match native frame rate
-        is_webcam = source.isdigit()
+        # 2. Instantiate YOLOv8
+        self.detector = YOLODetector(config.MODEL_PATH)
+        
+        active_source = global_state["source"]
+        if active_source == "videos/test.mp4":
+            download_sample_video(active_source)
+
+        cap = cv2.VideoCapture(int(active_source) if active_source.isdigit() else active_source)
+        if not cap.isOpened():
+            print(f"Error: Unable to open video source: {active_source}")
+            global_state["is_running"] = False
+            return
+
+        is_webcam = active_source.isdigit()
         native_fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
         frame_delay = 1.0 / native_fps
 
         print("Video processing thread started successfully.")
         
         while not self.stop_event.is_set():
+            # Check for dynamic video source switching
+            if global_state["source"] != active_source:
+                print(f"Switching video source from {active_source} to {global_state['source']}")
+                active_source = global_state["source"]
+                cap.release()
+                if active_source == "videos/test.mp4":
+                    download_sample_video(active_source)
+                cap = cv2.VideoCapture(int(active_source) if active_source.isdigit() else active_source)
+                is_webcam = active_source.isdigit()
+                native_fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
+                frame_delay = 1.0 / native_fps
+                # Reset counters
+                counter.in_count = 0
+                counter.out_count = 0
+                counter.counted_ids.clear()
+                counter.track_history.clear()
+
             t_start = time.time()
 
             # Read frame
@@ -93,6 +108,11 @@ class VideoProcessingThread(threading.Thread):
                 # Loop video file if it ends
                 if not is_webcam:
                     cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                    # Reset counting stats on loop restart to keep metrics accurate
+                    counter.in_count = 0
+                    counter.out_count = 0
+                    counter.counted_ids.clear()
+                    counter.track_history.clear()
                     continue
                 else:
                     print("Webcam disconnected.")

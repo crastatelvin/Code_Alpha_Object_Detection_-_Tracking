@@ -32,7 +32,7 @@ class YOLODetector:
         
         # Parse filter classes if provided
         target_ids = None
-        if filter_classes is not None:
+        if filter_classes:
             target_ids = []
             for cls in filter_classes:
                 if isinstance(cls, int):
