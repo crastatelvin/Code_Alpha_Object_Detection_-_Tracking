@@ -32,6 +32,7 @@ function App() {
   const [trackerType, setTrackerType] = useState('sort');
   const [confThreshold, setConfThreshold] = useState(0.35);
   const [selectedClasses, setSelectedClasses] = useState(['person', 'car']);
+  const [videoSource, setVideoSource] = useState('videos/test.mp4');
 
   // WebSocket reference
   const wsRef = useRef(null);
@@ -55,7 +56,8 @@ function App() {
         sendConfig(ws, {
           tracker_type: trackerType,
           conf_threshold: confThreshold,
-          filter_classes: selectedClasses
+          filter_classes: selectedClasses,
+          source: videoSource
         });
       };
 
@@ -69,6 +71,9 @@ function App() {
             setTrackerType(cfg.tracker_type);
             setConfThreshold(cfg.conf_threshold);
             setSelectedClasses(cfg.filter_classes);
+            if (cfg.source) {
+              setVideoSource(cfg.source);
+            }
           }
         } catch (err) {
           console.error("Error parsing WebSocket message:", err);
@@ -117,7 +122,8 @@ function App() {
     sendConfig(null, {
       tracker_type: type,
       conf_threshold: confThreshold,
-      filter_classes: selectedClasses
+      filter_classes: selectedClasses,
+      source: videoSource
     });
   };
 
@@ -127,7 +133,8 @@ function App() {
     sendConfig(null, {
       tracker_type: trackerType,
       conf_threshold: val,
-      filter_classes: selectedClasses
+      filter_classes: selectedClasses,
+      source: videoSource
     });
   };
 
@@ -144,7 +151,18 @@ function App() {
     sendConfig(null, {
       tracker_type: trackerType,
       conf_threshold: confThreshold,
-      filter_classes: updated
+      filter_classes: updated,
+      source: videoSource
+    });
+  };
+
+  const handleSourceChange = (src) => {
+    setVideoSource(src);
+    sendConfig(null, {
+      tracker_type: trackerType,
+      conf_threshold: confThreshold,
+      filter_classes: selectedClasses,
+      source: src
     });
   };
 
@@ -276,6 +294,28 @@ function App() {
                 onClick={() => handleTrackerChange('deepsort')}
               >
                 Deep SORT (Deep Visual)
+              </button>
+            </div>
+          </div>
+
+          {/* Video Feed Source */}
+          <div className="control-section">
+            <div className="control-label">
+              <span>Video Feed Source</span>
+              <span className="label-value">{videoSource === '0' ? 'Webcam (0)' : 'Sample Video'}</span>
+            </div>
+            <div className="radio-pill-group">
+              <button 
+                className={`radio-pill-btn ${videoSource === 'videos/test.mp4' ? 'active' : ''}`}
+                onClick={() => handleSourceChange('videos/test.mp4')}
+              >
+                Sample Video
+              </button>
+              <button 
+                className={`radio-pill-btn ${videoSource === '0' ? 'active' : ''}`}
+                onClick={() => handleSourceChange('0')}
+              >
+                Webcam Feed
               </button>
             </div>
           </div>

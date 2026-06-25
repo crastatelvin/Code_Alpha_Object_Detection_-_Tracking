@@ -243,6 +243,8 @@ def update_config_http(cfg: dict):
         global_state["conf_threshold"] = float(cfg["conf_threshold"])
     if "filter_classes" in cfg:
         global_state["filter_classes"] = cfg["filter_classes"]
+    if "source" in cfg:
+        global_state["source"] = str(cfg["source"])
     return {"status": "success", "config": global_state}
 
 def frame_generator():
@@ -306,6 +308,8 @@ async def websocket_endpoint(websocket: WebSocket):
                     global_state["conf_threshold"] = float(cfg["conf_threshold"])
                 if "filter_classes" in cfg:
                     global_state["filter_classes"] = cfg["filter_classes"]
+                if "source" in cfg:
+                    global_state["source"] = str(cfg["source"])
                 
                 # Send confirmation response
                 await websocket.send_json({
@@ -313,7 +317,8 @@ async def websocket_endpoint(websocket: WebSocket):
                     "config": {
                         "tracker_type": global_state["tracker_type"],
                         "conf_threshold": global_state["conf_threshold"],
-                        "filter_classes": global_state["filter_classes"]
+                        "filter_classes": global_state["filter_classes"],
+                        "source": global_state["source"]
                     }
                 })
                 print(f"Config dynamically updated via WS: {global_state}")
