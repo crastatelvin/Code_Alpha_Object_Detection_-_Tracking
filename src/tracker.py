@@ -188,10 +188,11 @@ class Sort(object):
         self.trackers = []
         self.frame_count = 0
 
-    def update(self, dets=np.empty((0, 5))):
+    def update(self, dets=np.empty((0, 5)), frame=None):
         """
         Params:
           dets - a numpy array of detections in the format [[x1,y1,x2,y2,score],...]
+          frame - BGR frame image (ignored in SORT)
         Requires: this method must be called once for each frame even with empty detections.
         Returns the a similar array where the last column is the object ID.
         NOTE: The number of objects returned may differ from the number of detections provided.
@@ -236,3 +237,69 @@ class Sort(object):
         if (len(ret) > 0):
             return np.concatenate(ret, axis=0)
         return np.empty((0, 5))
+
+from deep_sort_realtime.deepsort_tracker import DeepSort
+
+class DeepSortTracker:
+    """
+    A wrapper class for Deep SORT tracker using the deep-sort-realtime package.
+    """
+    def __init__(self, max_age=5, n_init=3, max_cosine_distance=0.2):
+        self.tracker = DeepSort(
+            max_age=max_age,
+            n_init=n_init,
+            max_cosine_distance=max_cosine_distance,
+            embedder="mobilenet",
+            half=False,
+            bgr=True
+        )
+
+    def update(self, dets=np.empty((0, 5)), frame=None):
+        """
+        Updates the tracker with new detections.
+        dets: numpy array of [x1, y1, x2, y2, score]
+        frame: BGR frame image (required for deep sort appearance features)
+        Returns:
+            tracks: numpy array of [x1, y1, x2, y2, track_id]
+        """
+        if frame is None:
+            raise ValueError("Deep SORT tracker requires the BGR frame for visual feature extraction.")
+
+        # Convert detections to Deep SORT format: [([x, y, w, h], confidence, class_name)]
+        ds_dets = []
+        for det in dets:
+            x1, y1, x2, y2, score = det
+            w = x2 - x1
+            h = y2 - y1
+            # Deep SORT requires a list/tuple format: ([left, top, width, height], confidence, class_name)
+            # We can use a dummy class label like "object" since YOLO class filtering is done beforehand.
+            ds_dets.append(([float(x1), float(y1), float(w), float(h)], float(score), "object"))
+
+        # Update tracks
+        ds_tracks = self.tracker.update_tracks(ds_dets, frame=frame)
+
+        ret = []
+        for track in ds_tracks:
+            # We only keep tracks that are confirmed and active
+            if not track.is_confirmed():
+                continue
+            
+            # get_ltwh returns [left, top, width, height]
+            ltwh = track.to_ltwh()
+            x1 = ltwh[0]
+            y1 = ltwh[1]
+            x2 = x1 + ltwh[2]
+            y2 = y1 + ltwh[3]
+            
+            try:
+                track_id = int(track.track_id)
+            except ValueError:
+                # If track ID is a string, hash it to get an integer ID
+                track_id = int(hash(track.track_id) % 10000)
+
+            ret.append([x1, y1, x2, y2, track_id])
+
+        if len(ret) > 0:
+            return np.array(ret)
+        return np.empty((0, 5))
+
