@@ -31,7 +31,7 @@ global_state = {
     "tracker_type": config.TRACKER_TYPE,
     "conf_threshold": config.CONF_THRESHOLD,
     "filter_classes": config.FILTER_CLASSES,
-    "source": "videos/test.mp4",
+    "source": "videos/traffic.mp4",
     "is_running": False
 }
 
@@ -84,7 +84,7 @@ class VideoProcessingThread(threading.Thread):
         self.detector = YOLODetector(config.MODEL_PATH)
         
         active_source = global_state["source"]
-        if active_source == "videos/test.mp4":
+        if active_source == "videos/traffic.mp4":
             download_sample_video(active_source)
 
         cap = cv2.VideoCapture(int(active_source) if active_source.isdigit() else active_source)
@@ -106,7 +106,7 @@ class VideoProcessingThread(threading.Thread):
                 print(f"Switching video source from {active_source} to {global_state['source']}")
                 active_source = global_state["source"]
                 cap.release()
-                if active_source == "videos/test.mp4":
+                if active_source == "videos/traffic.mp4":
                     download_sample_video(active_source)
                 cap = cv2.VideoCapture(int(active_source) if active_source.isdigit() else active_source)
                 is_webcam = active_source.isdigit()

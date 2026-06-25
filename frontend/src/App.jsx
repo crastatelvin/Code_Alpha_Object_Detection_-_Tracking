@@ -32,7 +32,7 @@ function App() {
   const [trackerType, setTrackerType] = useState('sort');
   const [confThreshold, setConfThreshold] = useState(0.35);
   const [selectedClasses, setSelectedClasses] = useState(['person', 'car']);
-  const [videoSource, setVideoSource] = useState('videos/test.mp4');
+  const [videoSource, setVideoSource] = useState('videos/traffic.mp4');
 
   // WebSocket reference
   const wsRef = useRef(null);
@@ -306,8 +306,8 @@ function App() {
             </div>
             <div className="radio-pill-group">
               <button 
-                className={`radio-pill-btn ${videoSource === 'videos/test.mp4' ? 'active' : ''}`}
-                onClick={() => handleSourceChange('videos/test.mp4')}
+                className={`radio-pill-btn ${videoSource === 'videos/traffic.mp4' ? 'active' : ''}`}
+                onClick={() => handleSourceChange('videos/traffic.mp4')}
               >
                 Sample Video
               </button>

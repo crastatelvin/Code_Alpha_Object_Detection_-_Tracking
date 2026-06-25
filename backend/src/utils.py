@@ -145,7 +145,7 @@ class LineCounter:
 import os
 import urllib.request
 
-def download_sample_video(output_path="videos/test.mp4"):
+def download_sample_video(output_path="videos/traffic.mp4"):
     """Downloads a sample traffic video for testing if it doesn't already exist."""
     if os.path.exists(output_path):
         print(f"Using existing test video: {output_path}")
@@ -156,7 +156,7 @@ def download_sample_video(output_path="videos/test.mp4"):
     if dir_name:
         os.makedirs(dir_name, exist_ok=True)
     
-    url = "https://github.com/intel-iot-devkit/sample-videos/raw/master/person-bicycle-car-detection.mp4"
+    url = "https://github.com/intel-iot-devkit/sample-videos/raw/master/car-detection.mp4"
     print(f"Downloading sample video from: {url} ...")
     try:
         urllib.request.urlretrieve(url, output_path)
