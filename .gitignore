@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+
+# Models & Weights
+*.pt
+*.onnx
+
+# Data & Videos
+*.mp4
+*.avi
+*.mkv
+*.mov
+videos/
+output/
+
+# IDEs & System
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+plan.md
+
