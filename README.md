@@ -25,6 +25,7 @@
 ## 📋 Table of Contents
 
 - [Overview](#-overview)
+- [Application Preview](#-application-preview)
 - [Features](#-features)
 - [Architecture](#-architecture)
 - [Tech Stack](#-tech-stack)
@@ -43,6 +44,30 @@
 This project decouples deep-learning computer vision from client rendering by building a high-performance, asynchronous FastAPI backend and a responsive React client web console. 
 
 The backend runs camera processing on a background thread, updates trackers, counts line-crossings via 2D vector mathematics, and streams annotated frame buffers via Motion JPEG (MJPEG) alongside live WebSocket telemetry. The React client displays this video feed in a sci-fi viewport HUD and provides instant control sliders and class-filtering tags.
+
+---
+
+## 🖼️ Application Preview
+
+<div align="center">
+
+### 1) Real-Time Vehicle Tracking (Highway)
+
+![Highway Traffic Tracking](docs/screenshots/highway_sort.png)
+
+<br/>
+
+### 2) Interactive Parameters & Telemetry Console
+
+![Parameters & Telemetry Console](docs/screenshots/highway_parameters.png)
+
+<br/>
+
+### 3) Live Webcam Object Detection & Tracking
+
+![Live Webcam Feed](docs/screenshots/webcam_detect.png)
+
+</div>
 
 ---
 
@@ -81,7 +106,7 @@ The backend runs camera processing on a background thread, updates trackers, cou
                                │ Thread Decoupled Frame
                                ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                 Background Processing Thread                 │
+│                 Background Processing Thread                │
 │                                                             │
 │   OpenCV Capture ──► YOLOv8 ──► SORT/DeepSORT ──► Counter   │
 └─────────────────────────────────────────────────────────────┘

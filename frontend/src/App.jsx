@@ -19,6 +19,9 @@ const AVAILABLE_CLASSES = [
 ];
 
 function App() {
+  const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const apiBase = isLocalDev ? '' : 'http://localhost:8000';
+
   // Connection and telemetry states
   const [wsConnected, setWsConnected] = useState(false);
   const [telemetry, setTelemetry] = useState({
@@ -41,9 +44,10 @@ function App() {
   // Connect to telemetry WebSocket
   useEffect(() => {
     function connect() {
-      // Determine WebSocket URL based on current host (proxied by Vite)
+      // Determine WebSocket URL based on current host (proxied by Vite or fallback to localhost:8000)
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}/ws`;
+      const wsHost = isLocalDev ? window.location.host : 'localhost:8000';
+      const wsUrl = `${protocol}//${wsHost}/ws`;
       
       console.log(`Connecting WebSocket to: ${wsUrl}`);
       const ws = new WebSocket(wsUrl);
@@ -210,7 +214,7 @@ function App() {
 
             {wsConnected ? (
               <img 
-                src="/api/video_feed" 
+                src={`${apiBase}/api/video_feed`} 
                 className="viewport-stream" 
                 alt="Object Tracking Stream"
                 onError={(e) => {
