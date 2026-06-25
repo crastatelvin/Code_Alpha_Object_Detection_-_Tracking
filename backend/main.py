@@ -47,6 +47,22 @@ telemetry = {
 latest_frame_bytes = None
 frame_lock = threading.Lock()
 
+def calculate_iou(box1, box2):
+    """Computes Intersection over Union (IoU) between two bounding boxes."""
+    x1 = max(box1[0], box2[0])
+    y1 = max(box1[1], box2[1])
+    x2 = min(box1[2], box2[2])
+    y2 = min(box1[3], box2[3])
+    
+    inter_area = max(0, x2 - x1) * max(0, y2 - y1)
+    box1_area = (box1[2] - box1[0]) * (box1[3] - box1[1])
+    box2_area = (box2[2] - box2[0]) * (box2[3] - box2[1])
+    
+    union_area = box1_area + box2_area - inter_area
+    if union_area == 0:
+        return 0
+    return inter_area / union_area
+
 class VideoProcessingThread(threading.Thread):
     def __init__(self):
         super().__init__()
@@ -55,6 +71,7 @@ class VideoProcessingThread(threading.Thread):
         self.detector = None
         self.tracker = None
         self.tracker_type = None
+        self.track_id_to_class = {}  # Map track_id -> class label
 
     def run(self):
         global latest_frame_bytes, telemetry
@@ -99,6 +116,7 @@ class VideoProcessingThread(threading.Thread):
                 counter.out_count = 0
                 counter.counted_ids.clear()
                 counter.track_history.clear()
+                self.track_id_to_class.clear()
 
             t_start = time.time()
 
@@ -113,6 +131,7 @@ class VideoProcessingThread(threading.Thread):
                     counter.out_count = 0
                     counter.counted_ids.clear()
                     counter.track_history.clear()
+                    self.track_id_to_class.clear()
                     continue
                 else:
                     print("Webcam disconnected.")
@@ -123,6 +142,7 @@ class VideoProcessingThread(threading.Thread):
             if self.tracker is None or self.tracker_type != current_tracker_type:
                 print(f"Instantiating new tracker: {current_tracker_type.upper()}")
                 self.tracker_type = current_tracker_type
+                self.track_id_to_class.clear()
                 if self.tracker_type == "deepsort":
                     self.tracker = DeepSortTracker(
                         max_age=config.SORT_MAX_AGE,
@@ -160,8 +180,24 @@ class VideoProcessingThread(threading.Thread):
                 tx1, ty1, tx2, ty2 = int(tx1), int(ty1), int(tx2), int(ty2)
                 track_id = int(track_id)
                 
+                # Match track_id with detections to determine class label
+                if track_id not in self.track_id_to_class:
+                    best_iou = 0
+                    best_label = "object"
+                    for det in detections:
+                        iou = calculate_iou([tx1, ty1, tx2, ty2], det["bbox"])
+                        if iou > best_iou:
+                            best_iou = iou
+                            best_label = det["label"]
+                    if best_iou > 0.3:
+                        self.track_id_to_class[track_id] = best_label
+                    else:
+                        self.track_id_to_class[track_id] = "object"
+
+                class_label = self.track_id_to_class.get(track_id, "object")
+                
                 cv2.rectangle(frame, (tx1, ty1), (tx2, ty2), (0, 255, 255), 2)
-                label = f"ID {track_id}"
+                label = f"{class_label.upper()} #{track_id}"
                 cv2.putText(frame, label, (tx1, ty1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2, cv2.LINE_AA)
 
             # 8. Run FPS and Line Counter Analytics
