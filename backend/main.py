@@ -98,6 +98,7 @@ class VideoProcessingThread(threading.Thread):
         frame_delay = 1.0 / native_fps
 
         print("Video processing thread started successfully.")
+        failed_frames = 0
         
         while not self.stop_event.is_set():
             # Check for dynamic video source switching
@@ -111,6 +112,7 @@ class VideoProcessingThread(threading.Thread):
                 is_webcam = active_source.isdigit()
                 native_fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
                 frame_delay = 1.0 / native_fps
+                failed_frames = 0
                 # Reset counters
                 counter.in_count = 0
                 counter.out_count = 0
@@ -134,8 +136,14 @@ class VideoProcessingThread(threading.Thread):
                     self.track_id_to_class.clear()
                     continue
                 else:
-                    print("Webcam disconnected.")
-                    break
+                    failed_frames += 1
+                    if failed_frames > 50:
+                        print("Webcam disconnected (too many failed frames).")
+                        break
+                    time.sleep(0.1)
+                    continue
+
+            failed_frames = 0
 
             # 4. Check for Tracker Type changes
             current_tracker_type = global_state["tracker_type"]
