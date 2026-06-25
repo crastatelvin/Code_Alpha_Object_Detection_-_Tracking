@@ -2,21 +2,21 @@
 
 # 👁️ DETECT & TRACK
 
-### Real-Time Object Detection & Multi-Object Tracking — YOLOv8 + SORT / Deep SORT Pipeline
+### Real-Time Object Detection & Multi-Object Tracking — FastAPI + React Web Console
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![OpenCV](https://img.shields.io/badge/OpenCV-4.x-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white)](https://opencv.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.136-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-18.x-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
 [![YOLOv8](https://img.shields.io/badge/YOLO-v8-FF6F00?style=for-the-badge&logo=ultralytics&logoColor=white)](https://ultralytics.com/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.11%2B-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
 <br/>
 
-> **Detect & Track** is a production-grade multi-object tracking system. Connect a local camera or supply a raw video file, and run real-time inference using YOLOv8 coupled with state-of-the-art tracking (custom motion-based SORT and appearance-based Deep SORT) and live crossing boundary counters — all configurable through a modular, object-oriented codebase.
+> **Detect & Track** is a production-grade multi-object tracking platform. Connect a camera feed or stream raw video, run real-time inference (YOLOv8 + SORT / Deep SORT), and watch live tracking telemetry on a glassmorphic dashboard. Adjust parameters like confidence thresholds, class filters, and tracker engines in real-time.
 
 <br/>
 
-![YOLOv8](https://img.shields.io/badge/Inference-YOLOv8_Nano-f3b44f?style=for-the-badge) ![Tracking](https://img.shields.io/badge/State_Estimation-SORT_%2F_Deep_SORT-5aa6ff?style=for-the-badge) ![Counting](https://img.shields.io/badge/Analytics-Line_Crossing_Counts-b189ff?style=for-the-badge) ![OOP](https://img.shields.io/badge/Structure-Modular_OOP_Design-36cfc9?style=for-the-badge)
+![YOLOv8](https://img.shields.io/badge/Inference-YOLOv8_Nano-f3b44f?style=for-the-badge) ![Tracking](https://img.shields.io/badge/State_Estimation-SORT_%2F_Deep_SORT-5aa6ff?style=for-the-badge) ![Web](https://img.shields.io/badge/Console-React_%2B_Vite_Dashboard-b189ff?style=for-the-badge) ![AutoStream](https://img.shields.io/badge/Protocol-MJPEG_%2B_WebSockets-36cfc9?style=for-the-badge)
 
 </div>
 
@@ -31,18 +31,18 @@
 - [Project Structure](#-project-structure)
 - [Installation](#-installation)
 - [Usage](#-usage)
-- [CLI Reference](#-cli-reference)
+- [API Reference](#-api-reference)
 - [Configuration](#-configuration)
-- [Testing \& Run Verification](#-testing--run-verification)
+- [Testing & Run Verification](#-testing--run-verification)
 - [License](#-license)
 
 ---
 
 ## 🧠 Overview
 
-This project provides a robust, production-style video processing pipeline for real-time computer vision tasks. The backend normalizes video input, applies deep learning object detection (YOLOv8), feeds detection coordinates and scores into a state estimator, and handles multi-object association frame-by-frame. 
+This project decouples deep-learning computer vision from client rendering by building a high-performance, asynchronous FastAPI backend and a responsive React client web console. 
 
-Users can track common COCO classes (like pedestrians, vehicles, bicycles), define physical counting gates (virtual lines), monitor real-time processing FPS, and export annotated runs to disk.
+The backend runs camera processing on a background thread, updates trackers, counts line-crossings via 2D vector mathematics, and streams annotated frame buffers via Motion JPEG (MJPEG) alongside live WebSocket telemetry. The React client displays this video feed in a sci-fi viewport HUD and provides instant control sliders and class-filtering tags.
 
 ---
 
@@ -50,48 +50,41 @@ Users can track common COCO classes (like pedestrians, vehicles, bicycles), defi
 
 | Feature | Description |
 |---|---|
-| 🔍 **Advanced Detection** | Runs YOLOv8 models (`yolov8n.pt` up to `yolov8x.pt`) to identify coordinates, classes, and confidence |
-| 🔄 **SORT tracking** | Fast, motion-only tracking using Kalman Filters and Hungarian bounding-box association |
-| 🧠 **Deep SORT tracking** | Appearance-based tracking via deep visual features (MobileNet) to maintain ID consistency |
-| 🚷 **Virtual Line Crossing** | Custom boundary lines to count items entering/exiting with 2D cross-product math |
-| ⚡ **Stable FPS Overlay** | Deque-based sliding average window for accurate, smooth frame-rate visualizations |
-| 🎯 **Flexible Class Filters** | Track specific target classes (e.g. only persons/cars) or track all COCO classes |
-| 📽️ **Output Recording** | Automatically saves processed runs to custom `.mp4` video files |
-| 💻 **Headless Mode** | CLI flag to run without window GUI, enabling execution on servers or headless containers |
+| 🔍 **Advanced Detection** | Identifies and filters targets using YOLOv8 models (`yolov8n.pt` up to `yolov8x.pt`) |
+| 🔄 **Dual Tracking Engines** | Choose **SORT** (motion-based state estimation) or **Deep SORT** (appearance-based embeddings) |
+| 🚷 **Virtual Line Crossing** | Tracks and counts objects crossing entry/exit boundaries in real-time |
+| 🧪 **Responsive WebSocket Telemetry** | Broadcasts current FPS, active track count, and crossed metrics at 10Hz |
+| 🎛️ **Live Parameter Tuning** | Adjust confidence thresholds, class tags, and tracker engines on-the-fly without resets |
+| 📽️ **MJPEG Stream Viewport** | Zero-overhead processed camera frame streams rendered directly in browser image viewport |
+| 🎨 **Premium Neon Dashboard** | Glassmorphic cards, scifi HUD crosshairs, glowing speed dials, and responsive layouts |
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-Webcam / Video File
-       │
-       ▼
-┌───────────────────────────────────────────────────────────────┐
-│                    OpenCV Video Capture                       │
-│  Reads frame matrix ──► Checks resolution, FPS ──► Decodes    │
-└──────────────────────┬────────────────────────────────────────┘
-                       │ Frame Image
-                       ▼
-┌───────────────────────────────────────────────────────────────┐
-│                      YOLOv8 Inference                         │
-│  Detects objects ──► Extracts Bounding Boxes, Conf, Classes   │
-└──────────────────────┬────────────────────────────────────────┘
-                       │ Bbox (x1, y1, x2, y2) + Confidence
-                       ▼
-┌───────────────────────────────────────────────────────────────┐
-│                     Tracker (SORT/DeepSORT)                   │
-│  Kalman Filters predict state ──► Hungarian Match ──► Keep ID │
-└──────────────────────┬────────────────────────────────────────┘
-                       │ Active Tracks (x1, y1, x2, y2, ID)
-                       ▼
-┌───────────────────────────────────────────────────────────────┐
-│                      Analytics Overlays                       │
-│  Line Counter (2D Cross Product) ──► FPS Calculator (Deque)   │
-└──────────────────────┬────────────────────────────────────────┘
-                       │ Annotated Frame Output
-                       ▼
-            Screen UI / Saved Video File
+┌─────────────────────────────────────────────────────────────┐
+│                       React Web Console                     │
+│                                                             │
+│   Viewport Stream (<img>)  ◄─── GET /api/video_feed         │
+│   Telemetry Analytics      ◄─── WS /ws (10Hz push)          │
+│   Parameter Tuning Controls ───► WS /ws (config JSON update)│
+└──────────────────────────────┬──────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│                        FastAPI Server                       │
+│                                                             │
+│   /api/video_feed ──► Serves MJPEG frame buffers            │
+│   /ws             ──► Pushes telemetry / receives configs   │
+└──────────────────────────────┬──────────────────────────────┘
+                               │ Thread Decoupled Frame
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│                 Background Processing Thread                 │
+│                                                             │
+│   OpenCV Capture ──► YOLOv8 ──► SORT/DeepSORT ──► Counter   │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -100,12 +93,12 @@ Webcam / Video File
 
 | Layer | Technology |
 |---|---|
-| **Core Language** | Python 3.10+ |
+| **Backend API** | FastAPI, Uvicorn, Websockets, Python 3.10+ |
 | **Object Detection** | Ultralytics YOLOv8 PyTorch SDK |
-| **Multi-Object Tracking** | Kalman Filters (filterpy), Hungarian Assignment (scipy) |
-| **Visual Embeddings** | Deep SORT (deep-sort-realtime) |
-| **Image Processing** | OpenCV (opencv-python), NumPy |
-| **Video Math** | SciPy, NumPy |
+| **State Tracking** | Kalman Filters (filterpy), Deep SORT (deep-sort-realtime) |
+| **Data Math** | NumPy, SciPy |
+| **Frontend UI** | React 18, Vite, Lucide Icons, Custom CSS |
+| **Communication** | REST (MJPEG) + WebSockets |
 
 ---
 
@@ -114,107 +107,100 @@ Webcam / Video File
 ```
 Code_Alpha_Object_Detection_-_Tracking/
 │
-├── config.py              # Central project configuration parameters
-├── main.py                # Command-line entry point & pipeline setup
-├── requirements.txt       # Python package dependencies
-├── videos/
-│   └── test.mp4           # Test video file (downloads automatically)
+├── backend/               # FastAPI Web Server Code
+│   ├── main.py            # API routes, WebSockets, background threads
+│   ├── config.py          # Central tracking configuration settings
+│   ├── requirements.txt   # Python server requirements
+│   ├── videos/            # Sample videos (downloads automatically)
+│   └── src/
+│       ├── detector.py    # YOLOv8 detector class
+│       ├── tracker.py     # SORT & Deep SORT tracker engines
+│       └── utils.py       # LineCounter, FPSCalculator, Downloader
 │
-└── src/
-    ├── __init__.py        # Package initialization marker
-    ├── detector.py        # YOLODetector wrapper class
-    ├── tracker.py         # SORT & Deep SORT tracker wrapper classes
-    ├── video_processor.py # Main loop for capture, tracking & writing
-    ├── utils.py           # FPSCalculator & LineCounter classes
-    ├── capture_test.py    # OpenCV video capture test tool
-    └── detect_test.py     # YOLOv8 basic inference test tool
+└── frontend/              # React Web Client Code
+    ├── src/
+    │   ├── App.jsx        # Dashboard layout, WebSocket sync
+    │   ├── App.css        # Premium neon styling overlays & grid
+    │   ├── index.css      # Reset styles & global fonts
+    │   └── main.jsx       # React entry point
+    ├── index.html         # HTML layout template with Outfit fonts
+    ├── vite.config.js     # Dev proxy definitions for /api and /ws
+    └── package.json       # Node package manager configurations
 ```
 
 ---
 
 ## 🚀 Installation
 
-### 1) Clone
+### 1) Clone the Repository
 ```bash
 git clone https://github.com/crastatelvin/Code_Alpha_Object_Detection_-_Tracking.git
 cd Code_Alpha_Object_Detection_-_Tracking
 ```
 
-### 2) Environment & Setup
+### 2) Setup the Backend
 ```bash
+cd backend
 python -m venv .venv
-# On Windows
+
+# Activate environment (Windows)
 .venv\Scripts\activate
-# On Linux/macOS
+# Activate environment (Linux/macOS)
 source .venv/bin/activate
 
 pip install -r requirements.txt
+```
+
+### 3) Setup the Frontend
+Open a new terminal window:
+```bash
+cd frontend
+npm install
 ```
 
 ---
 
 ## 💻 Usage
 
-Run the pipeline using the central entry point `main.py`.
-
-### 1. Basic Run (Webcam source 0, default SORT)
+### 1) Run the FastAPI Server
+From the `backend/` directory (with virtual environment active):
 ```bash
-python main.py --source 0
+python -m uvicorn main:app --host 127.0.0.1 --port 8000
 ```
+*The server will cache/download YOLOv8 weights and the sample video file automatically on startup.*
 
-### 2. Run on a Video File (Downloads a sample traffic video on first run)
+### 2) Run the React Web App
+From the `frontend/` directory:
 ```bash
-python main.py --source videos/test.mp4
+npm run dev
 ```
-
-### 3. Run with Deep SORT Tracker (Appearance-based)
-```bash
-python main.py --source videos/test.mp4 --tracker deepsort
-```
-
-### 4. Custom Filters (Track only cars and persons, confidence > 0.4)
-```bash
-python main.py --source videos/test.mp4 --classes car person --conf 0.40
-```
-
-### 5. Record Output to Disk
-```bash
-python main.py --source videos/test.mp4 --output output/tracking_result.mp4
-```
-
-### 6. Headless Server Run (Process 150 frames, skip UI window)
-```bash
-python main.py --source videos/test.mp4 --headless --max-frames 150
-```
+Open your browser and navigate to **`http://localhost:3000`** to view the live dashboard!
 
 ---
 
-## 📡 CLI Reference
+## 📡 API Reference
 
-| Parameter | Type | Default | Description |
+| Endpoint | Method | Protocol | Description |
 |---|---|---|---|
-| `--source` | `str` | `videos/test.mp4` | Webcam index (e.g. `0`) or path to a local video file |
-| `--tracker` | `str` | `sort` | Tracker engine choice: `sort` or `deepsort` |
-| `--conf` | `float` | `0.35` | Confidence score threshold for keeping YOLO detections |
-| `--classes` | `list` | `["person", "car"]` | List of target classes to track (space-separated) |
-| `--output` | `str` | `None` | Path to save output video, e.g. `output/result.mp4` |
-| `--headless` | `flag` | `False` | Run program without opening active window displays |
-| `--max-frames`| `int` | `None` | Process up to this number of frames, then stop |
+| `/api/status` | `GET` | HTTP | Returns API server status and running configurations |
+| `/api/config` | `POST`| HTTP | Dynamic parameter overrides via standard request payloads |
+| `/api/video_feed`| `GET` | HTTP | Streams the processed bounding-box overlay feed using MJPEG |
+| `/ws` | `GET` | WebSocket | Pushes live metrics (FPS, counters, tracks) & listens to parameter updates |
 
 ---
 
 ## ⚙️ Configuration
 
-Central default parameters can be managed directly in [`config.py`](./config.py):
+Tweak default settings directly in [`backend/config.py`](./backend/config.py):
 
 ```python
 # Central settings
 MODEL_PATH = "yolov8n.pt"      # YOLOv8 weight scale
-CONF_THRESHOLD = 0.35          # Keeping score
+CONF_THRESHOLD = 0.35          # Default score threshold
 TRACKER_TYPE = "sort"          # Default tracker ('sort'/'deepsort')
-FILTER_CLASSES = ["person", "car"] # Target labels
+FILTER_CLASSES = ["person", "car"] # Target classes
 
-# Line-Crossing gate: coordinates represent the counting segment
+# Line-Crossing coordinates segment [(x1, y1), (x2, y2)]
 COUNTING_LINE = [(100, 300), (540, 300)]
 ```
 
@@ -222,22 +208,16 @@ COUNTING_LINE = [(100, 300), (540, 300)]
 
 ## 🧪 Testing & Run Verification
 
-Run quick validation tests to verify that dependencies and hardware are properly configured.
+Before starting the web services, you can verify video frame decoding, YOLO inferences, and tracker modules:
 
-### Video Input Capture Test
+### Test Video Capture
 ```bash
-python src/capture_test.py --source 0 --headless
+python backend/src/capture_test.py --source 0 --headless
 ```
 
-### Object Detection Test
+### Test YOLOv8 Inference
 ```bash
-python src/detect_test.py
-```
-
-### Pipeline Verification Test
-```bash
-python main.py --headless --max-frames 30 --tracker sort
-python main.py --headless --max-frames 30 --tracker deepsort
+python backend/src/detect_test.py
 ```
 
 ---
