@@ -44,9 +44,9 @@ function App() {
   // Connect to telemetry WebSocket
   useEffect(() => {
     function connect() {
-      // Determine WebSocket URL based on current host (proxied by Vite or fallback to localhost:8000)
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const wsHost = isLocalDev ? window.location.host : 'localhost:8000';
+      // Use ws: for localhost endpoints because dev server doesn't run SSL
+      const protocol = (wsHost.startsWith('localhost') || wsHost.startsWith('127.0.0.1')) ? 'ws:' : 'wss:';
       const wsUrl = `${protocol}//${wsHost}/ws`;
       
       console.log(`Connecting WebSocket to: ${wsUrl}`);
