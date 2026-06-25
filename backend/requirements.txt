@@ -5,3 +5,7 @@ filterpy
 lap
 scipy
 deep-sort-realtime
+fastapi
+uvicorn[standard]
+websockets
+
