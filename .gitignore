@@ -25,6 +25,12 @@ output/
 .vscode/
 .idea/
 .DS_Store
+.gitattributes
 Thumbs.db
 plan.md
+
+# Allow documentation and UI assets
+!docs/screenshots/*.png
+!docs/screenshots/*.jpg
+!frontend/src/assets/hero.png
 
