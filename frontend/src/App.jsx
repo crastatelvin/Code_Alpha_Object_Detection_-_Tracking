@@ -32,7 +32,7 @@ function App() {
   const [trackerType, setTrackerType] = useState('sort');
   const [confThreshold, setConfThreshold] = useState(0.35);
   const [selectedClasses, setSelectedClasses] = useState(['person', 'car']);
-  const [videoSource, setVideoSource] = useState('videos/traffic.mp4');
+  const [videoSource, setVideoSource] = useState('videos/traffic_highway.mp4');
 
   // WebSocket reference
   const wsRef = useRef(null);
@@ -302,20 +302,52 @@ function App() {
           <div className="control-section">
             <div className="control-label">
               <span>Video Feed Source</span>
-              <span className="label-value">{videoSource === '0' ? 'Webcam (0)' : 'Sample Video'}</span>
+              <span className="label-value">
+                {videoSource === '0' ? 'Webcam Feed' : 
+                 videoSource === 'videos/traffic_highway.mp4' ? 'Highway Traffic' :
+                 videoSource === 'videos/traffic_pedestrians.mp4' ? 'Pedestrians & Cars' :
+                 videoSource === 'videos/traffic_crowd.mp4' ? 'Crowded Street' : 'Store Flow'}
+              </span>
             </div>
-            <div className="radio-pill-group">
-              <button 
-                className={`radio-pill-btn ${videoSource === 'videos/traffic.mp4' ? 'active' : ''}`}
-                onClick={() => handleSourceChange('videos/traffic.mp4')}
-              >
-                Sample Video
-              </button>
+            
+            <div className="source-selector-container" style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+              <div className="radio-pill-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.4rem', background: 'none', border: 'none', padding: 0 }}>
+                <button 
+                  className={`radio-pill-btn ${videoSource === 'videos/traffic_highway.mp4' ? 'active' : ''}`}
+                  onClick={() => handleSourceChange('videos/traffic_highway.mp4')}
+                  style={{ borderRadius: '8px' }}
+                >
+                  Highway Traffic
+                </button>
+                <button 
+                  className={`radio-pill-btn ${videoSource === 'videos/traffic_pedestrians.mp4' ? 'active' : ''}`}
+                  onClick={() => handleSourceChange('videos/traffic_pedestrians.mp4')}
+                  style={{ borderRadius: '8px' }}
+                >
+                  Pedestrians & Cars
+                </button>
+                <button 
+                  className={`radio-pill-btn ${videoSource === 'videos/traffic_crowd.mp4' ? 'active' : ''}`}
+                  onClick={() => handleSourceChange('videos/traffic_crowd.mp4')}
+                  style={{ borderRadius: '8px' }}
+                >
+                  Crowded Street
+                </button>
+                <button 
+                  className={`radio-pill-btn ${videoSource === 'videos/traffic_store.mp4' ? 'active' : ''}`}
+                  onClick={() => handleSourceChange('videos/traffic_store.mp4')}
+                  style={{ borderRadius: '8px' }}
+                >
+                  Store Flow
+                </button>
+              </div>
+              
               <button 
                 className={`radio-pill-btn ${videoSource === '0' ? 'active' : ''}`}
                 onClick={() => handleSourceChange('0')}
+                style={{ width: '100%', padding: '0.6rem', border: '1px solid rgba(0, 240, 255, 0.25)' }}
               >
-                Webcam Feed
+                📹 Start Live Webcam Feed
               </button>
             </div>
           </div>

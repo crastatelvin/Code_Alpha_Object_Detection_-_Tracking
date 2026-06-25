@@ -31,7 +31,7 @@ global_state = {
     "tracker_type": config.TRACKER_TYPE,
     "conf_threshold": config.CONF_THRESHOLD,
     "filter_classes": config.FILTER_CLASSES,
-    "source": "videos/traffic.mp4",
+    "source": "videos/traffic_highway.mp4",
     "is_running": False
 }
 
@@ -84,7 +84,7 @@ class VideoProcessingThread(threading.Thread):
         self.detector = YOLODetector(config.MODEL_PATH)
         
         active_source = global_state["source"]
-        if active_source == "videos/traffic.mp4":
+        if active_source.startswith("videos/"):
             download_sample_video(active_source)
 
         cap = cv2.VideoCapture(int(active_source) if active_source.isdigit() else active_source)
@@ -104,10 +104,11 @@ class VideoProcessingThread(threading.Thread):
             # Check for dynamic video source switching
             if global_state["source"] != active_source:
                 print(f"Switching video source from {active_source} to {global_state['source']}")
-                active_source = global_state["source"]
+                new_source = global_state["source"]
+                if new_source.startswith("videos/"):
+                    download_sample_video(new_source)
                 cap.release()
-                if active_source == "videos/traffic.mp4":
-                    download_sample_video(active_source)
+                active_source = new_source
                 cap = cv2.VideoCapture(int(active_source) if active_source.isdigit() else active_source)
                 is_webcam = active_source.isdigit()
                 native_fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
@@ -294,7 +295,15 @@ def update_config_http(cfg: dict):
 def frame_generator():
     """MJPEG Stream Frame Generator yielding multipart responses."""
     global latest_frame_bytes
+    if bg_thread is None or not bg_thread.is_alive():
+        print("Starting pipeline from frame generator...")
+        start_pipeline()
+        
     while global_state["is_running"]:
+        if bg_thread is not None and not bg_thread.is_alive() and global_state["is_running"]:
+            print("Background thread died unexpectedly. Restarting pipeline...")
+            start_pipeline()
+            
         if latest_frame_bytes is not None:
             with frame_lock:
                 frame = latest_frame_bytes
