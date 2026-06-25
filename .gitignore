@@ -16,6 +16,8 @@ env/
 *.avi
 *.mkv
 *.mov
+*.jpg
+*.png
 videos/
 output/
 
