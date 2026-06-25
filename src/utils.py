@@ -142,3 +142,26 @@ class LineCounter:
         cv2.putText(frame, f"In: {self.in_count}", (w - 150, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2, cv2.LINE_AA)
         cv2.putText(frame, f"Out: {self.out_count}", (w - 150, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2, cv2.LINE_AA)
 
+import os
+import urllib.request
+
+def download_sample_video(output_path="videos/test.mp4"):
+    """Downloads a sample traffic video for testing if it doesn't already exist."""
+    if os.path.exists(output_path):
+        print(f"Using existing test video: {output_path}")
+        return
+        
+    print(f"Sample video '{output_path}' not found.")
+    dir_name = os.path.dirname(output_path)
+    if dir_name:
+        os.makedirs(dir_name, exist_ok=True)
+    
+    url = "https://github.com/intel-iot-devkit/sample-videos/raw/master/person-bicycle-car-detection.mp4"
+    print(f"Downloading sample video from: {url} ...")
+    try:
+        urllib.request.urlretrieve(url, output_path)
+        print(f"Successfully downloaded sample video to: {output_path}")
+    except Exception as e:
+        print(f"Failed to download sample video: {e}")
+
+

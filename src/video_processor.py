@@ -89,7 +89,7 @@ class VideoProcessor:
 
                 # 3. Tracking Update
                 # tracker.update returns: [[x1, y1, x2, y2, id], ...]
-                tracks = self.tracker.update(sort_dets)
+                tracks = self.tracker.update(sort_dets, frame=frame)
 
                 # 4. Draw tracks
                 for track in tracks:
